@@ -56,7 +56,7 @@ flowchart TD
 **1. Clone or download the project**
 
 ```bash
-git clone https://github.com/KhunSama/File-Management.git
+git clone https://github.com/KhunSama/File-Management.git 
 ```
 
 **2. (Optional) Create a virtual environment**
