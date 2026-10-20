@@ -57,7 +57,6 @@ flowchart TD
 
 ```bash
 git clone https://github.com/KhunSama/File-Management.git
-cd File Management
 ```
 
 **2. (Optional) Create a virtual environment**
