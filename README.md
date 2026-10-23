@@ -66,8 +66,7 @@ flowchart TD
 **1. Clone or download the project**
 
 ```bash
-git clone <your-repo-url>
-cd <your-project-folder>
+git clone https://github.com/KhunSama/File-Management.git 
 ```
 
 **2. (Optional) Create a virtual environment**
@@ -182,7 +181,3 @@ functions · `while` loops · `match`/`case` · f-strings · file I/O (`open`, `
 - Delete-file flow (contained a bug)
 
 ---
-
-## 📄 License
-
-Add your license here (e.g. MIT).
