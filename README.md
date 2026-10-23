@@ -1,24 +1,27 @@
 # 📁 File Management System
 
-![Version](https://img.shields.io/badge/version-1.0-blue)
+![Version](https://img.shields.io/badge/version-1.1-blue)
 ![Python](https://img.shields.io/badge/python-3.10%2B-green)
+![Platform](https://img.shields.io/badge/platform-Windows-0078D6)
 ![Interface](https://img.shields.io/badge/interface-terminal%20(CLI)-lightgrey)
 
-A simple, menu-driven **command-line tool** for managing files in your current working directory. Navigate the menu with the arrow keys, press Enter to select, and let the program handle the rest.
+A simple, menu-driven **command-line tool** for managing files in your current working directory. Navigate the menus with the arrow keys, press Enter to select, and press `q` to go back.
 
-> **Status:** v1.0 is an early release. Some menu items are placeholders for future versions (see [Roadmap](#-roadmap)).
+> **Status:** v1.1 is an early release. Two main-menu items are still placeholders (see [Roadmap](#-roadmap)).
 
 ---
 
-## ✨ Features (v1.0)
+## ✨ Features (v1.1)
 
 | Feature | Menu Path | Status |
 |---|---|---|
 | Create a new (empty) file | File & Directory Management → Create a new file | ✅ Working |
+| Delete a file (with Y/N confirmation) | File & Directory Management → Delete a file | ✅ Working (see [Known Issues](#-known-issues-v11)) |
 | List all files with their sizes | File & Directory Management → Show all files | ✅ Working |
-| Delete a file (with Y/N confirmation) | File & Directory Management → Delete a file | ⚠️ Known bug (see below) |
-| Navigation & Directory Control | Main menu | 🚧 Not implemented yet |
-| File Inspection & Reading | Main menu | 🚧 Not implemented yet |
+| Go back with `q` | Sub-menus | ✅ Working |
+| Exit the program | Main menu → Exit the program | ✅ Working |
+| Navigation & Directory Control | Main menu | 🚧 Shows "Currently unavailable" |
+| File Inspection & Reading | Main menu | 🚧 Shows "Currently unavailable" |
 
 ---
 
@@ -29,14 +32,21 @@ flowchart TD
     A[🏠 Main Menu] --> B[Navigation & Directory Control 🚧]
     A --> C[File & Directory Management]
     A --> D[File Inspection & Reading 🚧]
+    A --> X[Exit the program ✅]
 
     C --> C1[Create a new file ✅]
-    C --> C2[Delete a file ⚠️]
+    C --> C2[Delete a file ✅]
     C --> C3[Show all files ✅]
+    C -- press q --> A
 
     C1 --> E{File exists?}
     E -- No --> F[Create empty file + 3s countdown]
     E -- Yes --> G[Show 'already exists' message]
+
+    C2 --> I{File exists?}
+    I -- Yes --> J{Confirm Y/N}
+    J -- Y --> K[Delete file]
+    I -- No --> L[Show 'does not exist' message]
 
     C3 --> H[List files + sizes in Bytes]
 ```
@@ -45,9 +55,9 @@ flowchart TD
 
 ## 🔧 Requirements
 
+- **Windows** (the program imports `msvcrt`, which only exists on Windows)
 - **Python 3.10 or newer** (the code uses `match` / `case`, introduced in Python 3.10)
-- The [`pick`](https://pypi.org/project/pick/) library for the arrow-key menus
-- **Windows** is recommended in v1.0 (see [Platform Notes](#-platform-notes))
+- The [`pick`](https://pypi.org/project/pick/) library (version 2.x) for the arrow-key menus
 
 ---
 
@@ -56,20 +66,15 @@ flowchart TD
 **1. Clone or download the project**
 
 ```bash
-git clone https://github.com/KhunSama/File-Management.git
-cd File Management
+git clone <your-repo-url>
+cd <your-project-folder>
 ```
 
 **2. (Optional) Create a virtual environment**
 
 ```bash
 python -m venv venv
-
-# Windows
 venv\Scripts\activate
-
-# macOS / Linux
-source venv/bin/activate
 ```
 
 **3. Install the dependency**
@@ -94,75 +99,90 @@ python main.py
 |---|---|
 | ↑ / ↓ | Move the `=>` indicator |
 | Enter | Select the highlighted option |
-| Any key | Continue / go back (on screens that say "Press any button") |
+| `q` | Go back to the previous menu |
+| Any key | Continue (on screens that say "Press any key") |
 
 ---
 
 ## 🧠 How It Works
 
+The code is split into small functions, and the two menus call each other like this:
+
 ```
-┌────────────────────────────────────────────┐
-│  while True  (main loop)                   │
-│   ├─ pick()  → show main menu              │
-│   └─ match   → run chosen option           │
-│        └─ while True  (sub-menu loop)      │
-│             ├─ pick()  → show sub-menu     │
-│             └─ match   → run chosen action │
-└────────────────────────────────────────────┘
+mainMenu()
+ ├─ showMenu()  → arrow-key menu (wraps pick's Picker, adds the 'q' handler)
+ ├─ match option
+ │    ├─ "File & Directory Management" → fileSubMenu()
+ │    │      ├─ showMenu()
+ │    │      └─ match option → create / delete / list
+ │    │      └─ 'q' returns to mainMenu()
+ │    ├─ the two 🚧 options → "Currently unavailable"
+ │    └─ "Exit the program" → sys.exit()
+ └─ loops until you exit
 ```
 
-**Helper functions**
+**Functions**
 
 | Function | What it does |
 |---|---|
-| `timer(seconds)` | Prints a live `MM:SS` countdown ("Redirecting in 00:03") before returning |
-| `press_any_key()` | Pauses until a key is pressed (uses `msvcrt`, Windows only) |
-| `clear_screen()` | Clears the terminal (`cls` on Windows, `clear` on macOS/Linux) |
+| `showMenu(options, title, ...)` | Shows an arrow-key menu and registers `q` as a "go back" key (returns index `-1`) |
+| `timer(seconds)` | Prints a live `MM:SS` countdown ("Redirecting in 00:03") |
+| `press_any_key()` | Pauses until a key is pressed (uses `msvcrt.getch()`) |
+| `clear_screen()` | Clears the terminal (`cls` on Windows, `clear` elsewhere) |
+| `fileSubMenu()` | The "File & Directory Management" menu: create, delete, list |
+| `mainMenu()` | The top-level menu loop |
 
-**Concepts used** (good to know if you're learning from this code):
-`while` loops · `match`/`case` · f-strings · file I/O (`open`, `os.remove`) · the `os` module (`getcwd`, `listdir`, `path.exists`, `path.isfile`, `path.getsize`) · third-party libraries (`pick`)
-
----
-
-## 🖥️ Platform Notes
-
-- `press_any_key()` only waits for input on **Windows**. On macOS/Linux it returns immediately, so messages may disappear too quickly.
-- The `pick` library uses `curses`. On Windows, `pick` pulls in `windows-curses` automatically; if the menu doesn't render, run `pip install windows-curses`.
+**Concepts used** (useful if you're learning from this code):
+functions · `while` loops · `match`/`case` · f-strings · file I/O (`open`, `os.remove`) · the `os` module (`getcwd`, `listdir`, `path.exists`, `path.isfile`, `path.getsize`) · `sys.exit` · nested functions and custom key handlers · third-party libraries (`pick`)
 
 ---
 
-## 🐛 Known Issues (v1.0)
+## 🐛 Known Issues (v1.1)
 
-1. **"Delete a file" does nothing.** The menu label is `"Delete a file"`, but the code matches `case "Delete file"`, so the strings never match. *Fix: make both strings identical.*
-2. **No way to go back** from the *File & Directory Management* sub-menu. The inner `while True` loop has no exit option.
-3. **Delete loop never exits after a successful delete** — it asks for another file name again.
-4. **Main-menu options 1 and 3** (*Navigation & Directory Control*, *File Inspection & Reading*) have no `case` yet, so selecting them just reloads the menu.
-5. **Current directory display is static.** `CurPath` is set once at startup and never updated.
-6. `show all files` calls `os.path.getsize(v)` with a relative path, which breaks if the working directory ever changes.
-7. Stray semicolons (`;`) throughout the code are valid but unnecessary in Python.
+1. **Windows only.** `import msvcrt` sits at the top of the file, so the program crashes on startup on macOS/Linux with an `ImportError`. *Fix: import `msvcrt` inside `press_any_key()` (only when `os.name == 'nt'`), as in v1.0.*
+2. **Delete loop doesn't exit after a successful delete.** It asks for another file name again, and the only way out is to enter a name that doesn't exist. Typing `n` also just asks for a file name again.
+3. **`q` on the main menu does nothing** (it just redraws the menu), but the title still says "Press 'q' to return to previous menu".
+4. **Current directory display is static.** `CurPath` is set once at startup and never updated.
+5. **"Show all files" uses `os.path.getsize(v)`** with a relative path, which breaks if the working directory ever changes. Using `os.path.join(CurPath, v)` would be safer.
+6. **Numbering gaps in the file list.** The number comes from `enumerate` over *all* entries, so skipped folders leave gaps (e.g. 1, 3, 4).
+7. **No error handling** for things like invalid file names or permission errors (`try` / `except` is not used yet).
+8. Stray semicolons (`;`) throughout the code are valid but unnecessary in Python.
 
 ---
 
 ## 🛣️ Roadmap
 
-- [ ] Fix the "Delete a file" bug
-- [ ] Add a **Back** / **Exit** option to every menu
+- [x] Fix the "Delete a file" menu bug
+- [x] Add a back option (`q`) and an Exit option
+- [x] Split the code into functions
+- [ ] Make the delete flow return to the menu after finishing
+- [ ] Cross-platform `press_any_key()`
 - [ ] **Navigation & Directory Control:** change directory, go up a level, show current path
 - [ ] **File Inspection & Reading:** view file contents, file info (size, modified date)
 - [ ] Create / delete **directories**
-- [ ] Cross-platform `press_any_key()`
-- [ ] Error handling with `try` / `except` (permissions, invalid names)
-- [ ] Split the code into functions / modules
+- [ ] Error handling with `try` / `except`
 
 ---
 
 ## 📝 Changelog
+
+### v1.1
+- Refactored into functions (`showMenu`, `fileSubMenu`, `mainMenu`, ...)
+- Added `q` key to go back from sub-menus
+- Added "Exit the program" option
+- Fixed the "Delete a file" option (menu text and `case` now match)
+- Unfinished options now show "Currently unavailable" instead of silently reloading
+- `msvcrt` is now imported at the top, making the program Windows-only
 
 ### v1.0
 - Initial release
 - Interactive arrow-key menu using `pick`
 - Create a new file
 - List files with sizes
-- Delete-file flow (contains a known bug)
+- Delete-file flow (contained a bug)
 
 ---
+
+## 📄 License
+
+Add your license here (e.g. MIT).
