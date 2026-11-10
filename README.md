@@ -1,20 +1,21 @@
-# 📁 File Management System
+# 📁 KHUN FILES — File Management System
 
-![Version](https://img.shields.io/badge/version-1.2-blue)
+![Version](https://img.shields.io/badge/version-1.3-blue)
 ![Python](https://img.shields.io/badge/python-3.10%2B-green)
 ![Platform](https://img.shields.io/badge/platform-Windows-0078D6)
 ![Interface](https://img.shields.io/badge/interface-terminal%20(CLI)-lightgrey)
 
-A simple, menu-driven **command-line tool** for managing files and folders in your current working directory. Navigate the menus with the arrow keys, press Enter to select, and press `q` to go back.
+A simple, menu-driven **command-line tool** for managing files and folders in your current working directory. It opens with an ASCII-art banner, and you navigate the menus with the arrow keys, press Enter to select, and press `q` to go back.
 
-> **Status:** v1.2 is an early release. Two features are still placeholders (see [Roadmap](#-roadmap)).
+> **Status:** v1.3 is an early release. Two features are still placeholders (see [Roadmap](#-roadmap)).
 
 ---
 
-## ✨ Features (v1.2)
+## ✨ Features (v1.3)
 
 | Feature | Menu Path | Status |
 |---|---|---|
+| ASCII-art title banner on every menu | All menus | ✅ Working |
 | Create a new (empty) file | File & Directory Management → Create a new file | ✅ Working |
 | Delete a file (with Y/N confirmation) | File & Directory Management → Delete a file | ✅ Working |
 | List all files with their sizes | File & Directory Management → Show all files | ✅ Working |
@@ -25,6 +26,30 @@ A simple, menu-driven **command-line tool** for managing files and folders in yo
 | File Inspection & Reading | Main menu | 🚧 Shows "Currently unavailable" |
 | Go back with `q` | Sub-menus | ✅ Working |
 | Exit the program | Main menu → Exit the program | ✅ Working |
+
+---
+
+## 🖼️ Screen Layout
+
+Every menu uses the same title, built by `make_title()`:
+
+```
+┌──────────────────────────────────────────────────────────┐
+│  [ ASCII-art banner: "KHUN FILES" (pyfiglet) ]           │
+│  ===========================================================
+│                                                          │
+│              File Management System                      │
+│      Current directory:  C:\your\current\folder          │
+│                                                          │
+│          Press 'q' to return to previous menu            │
+│  ===========================================================
+│                                                          │
+│  => Navigation & Directory Control      ← menu options   │
+│     File & Directory Management            (pick)        │
+│     File Inspection & Reading                            │
+│     Exit the program                                     │
+└──────────────────────────────────────────────────────────┘
+```
 
 ---
 
@@ -78,7 +103,9 @@ flowchart LR
 
 - **Windows** (the program imports `msvcrt`, which only exists on Windows)
 - **Python 3.10 or newer** (the code uses `match` / `case`, introduced in Python 3.10)
-- The [`pick`](https://pypi.org/project/pick/) library (version 2.x) for the arrow-key menus
+- [`pick`](https://pypi.org/project/pick/) (version 2.x) for the arrow-key menus
+- [`pyfiglet`](https://pypi.org/project/pyfiglet/) for the ASCII-art banner
+- A reasonably **large terminal window** (roughly 80+ columns and 25+ lines), because the banner makes the title tall and wide
 
 ---
 
@@ -87,7 +114,7 @@ flowchart LR
 **1. Clone or download the project**
 
 ```bash
-git clone https://github.com/KhunSama/File-Management.git 
+git clone https://github.com/KhunSama/File-Management
 ```
 
 **2. (Optional) Create a virtual environment**
@@ -97,11 +124,22 @@ python -m venv venv
 venv\Scripts\activate
 ```
 
-**3. Install the dependency**
+**3. Install the dependencies**
 
 ```bash
-pip install pick
+pip install pick pyfiglet
 ```
+
+> 💡 **Tip:** list your dependencies in a `requirements.txt` file so anyone can install them in one command:
+>
+> ```
+> pick
+> pyfiglet
+> ```
+>
+> ```bash
+> pip install -r requirements.txt
+> ```
 
 **4. Run the program** (replace `main.py` with your file name)
 
@@ -125,13 +163,34 @@ python main.py
 
 ---
 
+## 🎨 Customizing the Banner
+
+The banner text and style are set in one place, inside `make_title()`:
+
+```python
+art = pyfiglet.figlet_format("KHUN FILES", font="ansi_shadow", width=120)
+```
+
+- Change `"KHUN FILES"` to your own name or app title.
+- Change `font=` to try other styles. To see every font your installation has:
+
+  ```python
+  import pyfiglet
+  print(pyfiglet.FigletFont.getFonts())
+  ```
+
+- If you get a `FontNotFound` error, upgrade pyfiglet with `pip install --upgrade pyfiglet`, or pick a different font from the list above.
+
+---
+
 ## 🧠 How It Works
 
 The code is split into small functions, and the menus call each other like this:
 
 ```
 mainMenu()
- ├─ showMenu()  → arrow-key menu (wraps pick's Picker, adds the 'q' handler)
+ ├─ showMenu(options, make_title(CurPath))
+ │      └─ arrow-key menu (wraps pick's Picker, adds the 'q' handler)
  ├─ match option
  │    ├─ "Navigation & Directory Control" → folderSubMenu()
  │    │      └─ match option → create folder / delete folder / navigate (🚧)
@@ -146,6 +205,7 @@ mainMenu()
 
 | Function | What it does |
 |---|---|
+| `make_title(cur_path)` | Builds the title shown above every menu: ASCII banner, divider lines, app name, current directory, and the `q` hint |
 | `showMenu(options, title, ...)` | Shows an arrow-key menu and registers `q` as a "go back" key (returns index `-1`) |
 | `timer(seconds)` | Prints a live `MM:SS` countdown ("Redirecting in 00:03") |
 | `press_any_key()` | Pauses until a key is pressed (uses `msvcrt.getch()`) |
@@ -155,11 +215,11 @@ mainMenu()
 | `mainMenu()` | The top-level menu loop |
 
 **Concepts used** (useful if you're learning from this code):
-functions · `while` loops · `match`/`case` · f-strings · file I/O (`open`, `os.remove`) · the `os` module (`getcwd`, `listdir`, `mkdir`, `rmdir`, `path.exists`, `path.isfile`, `path.getsize`) · `sys.exit` · nested functions and custom key handlers · third-party libraries (`pick`)
+functions · `while` loops · `match`/`case` · f-strings · file I/O (`open`, `os.remove`) · the `os` module (`getcwd`, `listdir`, `mkdir`, `rmdir`, `path.exists`, `path.isfile`, `path.getsize`) · `sys.exit` · nested functions and custom key handlers · third-party libraries (`pick`, `pyfiglet`) · reusing code with a helper function (`make_title`)
 
 ---
 
-## 🐛 Known Issues (v1.2)
+## 🐛 Known Issues (v1.3)
 
 1. **Windows only.** `import msvcrt` sits at the top of the file, so the program crashes on startup on macOS/Linux with an `ImportError`. *Fix: import `msvcrt` inside `press_any_key()` (only when `os.name == 'nt'`).*
 2. **"Navigate to other directory" is an empty placeholder.** Selecting it does nothing and just redraws the menu.
@@ -167,7 +227,7 @@ functions · `while` loops · `match`/`case` · f-strings · file I/O (`open`, `
 4. **Wrong type of name crashes the delete.** Typing a *file* name into "Delete a folder" (or a *folder* name into "Delete a file") raises an error, because `os.path.exists()` is true for both.
 5. **Delete confirmation re-prompts silently.** Any answer other than `y` or `n` sends you back to the "File name / Folder name" prompt with no "Invalid" message.
 6. **"Show all files (hidden files included)" is misleadingly named.** `os.listdir()` already returns hidden files, so the real difference is that this option also lists *folders*. Consider renaming it to "Show all files and folders".
-7. **`q` on the main menu does nothing** (it just redraws the menu), but the title still says "Press 'q' to return to previous menu".
+7. **`q` on the main menu does nothing** (it just redraws the menu), but the title (shared by every menu) still says "Press 'q' to return to previous menu".
 8. **Current directory display is static.** `CurPath` is set once at startup and never updated, which will matter as soon as "Navigate" is implemented.
 9. **File sizes use a relative path.** `os.path.getsize(v)` breaks if the working directory ever changes. Use `os.path.join(CurPath, v)` instead.
 10. **Numbering gaps in "Show all files".** The number comes from `enumerate` over *all* entries, so skipped folders leave gaps (e.g. 1, 3, 4).
@@ -184,16 +244,22 @@ functions · `while` loops · `match`/`case` · f-strings · file I/O (`open`, `
 - [x] Delete flow returns to the menu after finishing *(v1.2)*
 - [x] Create / delete folders *(v1.2)*
 - [x] Option to list all entries, including folders *(v1.2)*
+- [x] ASCII-art banner, with the title code moved into one reusable function *(v1.3)*
 - [ ] Implement **Navigate to other directory** (and update `CurPath`)
 - [ ] **File Inspection & Reading:** view file contents, file info (size, modified date)
 - [ ] Handle non-empty folders and wrong-type names when deleting
 - [ ] Cross-platform `press_any_key()`
 - [ ] Error handling with `try` / `except`
 - [ ] Reduce repeated code (create/delete logic is nearly identical for files and folders)
+- [ ] Add a `requirements.txt`
 
 ---
 
 ## 📝 Changelog
+
+### v1.3
+- Added an ASCII-art **"KHUN FILES"** banner using `pyfiglet` (new dependency)
+- Moved the repeated title text into one function, `make_title()`, used by all three menus
 
 ### v1.2
 - Added the **Navigation & Directory Control** sub-menu (`folderSubMenu`)

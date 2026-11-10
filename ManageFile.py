@@ -2,9 +2,24 @@ import os;
 import sys;
 import time;
 import msvcrt;
+import pyfiglet
 from pick import Picker;
 
 CurPath = os.getcwd()
+
+def make_title(cur_path):
+    art = pyfiglet.figlet_format("KHUN FILES", font="ansi_shadow", width=120)
+    line = "=" * 75
+
+    return (
+        f"{art}\n"
+        f"{line}\n\n"
+        f"\t\t\t   File Management System\n"
+        f"\t Current directory:  {cur_path}\n\n"
+        f"\t\t   Press 'q' to return to previous menu\n\n"
+        f"{line}\n"
+    )
+
 
 def showMenu(options, title, indicator="=>", default_index=0):
     picker = Picker(
@@ -37,16 +52,8 @@ def clear_screen():
 
 def folderSubMenu():
     while True:
-        title = f"""
-        {"="*75}\n
-        \t\t\t   File Management System
-        \t Current directory:  {CurPath}\n
-        \t\t   Press 'q' to return to previous menu\n
-        {"="*75}
-                """
-
         options = ["Create a new folder", "Delete a folder", "Navigate to other directory"]
-        option, index = showMenu(options, title, indicator="=>", default_index=0)
+        option, index = showMenu(options, make_title(CurPath), indicator="=>", default_index=0)
 
         if index == -1:
             return
@@ -95,15 +102,8 @@ def folderSubMenu():
 
 def fileSubMenu():
     while True:
-        title = f"""
-        {"="*75}\n
-        \t\t\t   File Management System
-        \t Current directory:  {CurPath}\n
-        \t\t   Press 'q' to return to previous menu\n
-        {"="*75}
-                """
         options = ["Create a new file", "Delete a file", "Show all files", "Show all files (hidden files included)"]
-        option, index = showMenu(options, title, indicator="=>", default_index=0)
+        option, index = showMenu(options, make_title(CurPath), indicator="=>", default_index=0)
 
         if index == -1:
             return
@@ -169,15 +169,8 @@ def fileSubMenu():
 
 def mainMenu():
     while True:
-        title = f"""
-        {"="*75}\n
-        \t\t\t   File Management System
-        \t Current directory:  {CurPath}\n
-        \t\t   Press 'q' to return to previous menu\n
-        {"="*75}
-                """
         options = ["Navigation & Directory Control", "File & Directory Management", "File Inspection & Reading", "Exit the program"]
-        option, index = showMenu(options, title, indicator="=>", default_index=0);
+        option, index = showMenu(options, make_title(CurPath), indicator="=>", default_index=0);
 
         if index == -1:
             continue
@@ -190,11 +183,11 @@ def mainMenu():
                 fileSubMenu()
 
             case "File Inspection & Reading":
-                        print("Currently unavailable")
-                        print("Press any key to return")
-                        press_any_key()
-                        clear_screen()
-                        continue;
+                print("Currently unavailable")
+                print("Press any key to return")
+                press_any_key()
+                clear_screen()
+                continue;
 
             case "Exit the program":
                 sys.exit("Hope to see you again, Goodbye!")
